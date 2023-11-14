@@ -126,13 +126,12 @@ fn parse_string_links(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     let file = fs::File::open("../protein.links.full.v12.0.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines().skip(1).progress_with(ProgressBar::new_spinner()) {
         let line = line?;
         if line.starts_with("#") {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
-
+        let vals = line.split(" ").collect::<Vec<_>>();
         let src = vals[0];
         let node_id = vocab.len();
         vocab.entry(src.to_string()).or_insert(node_id);
