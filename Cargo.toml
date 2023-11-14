@@ -9,3 +9,6 @@ edition = "2021"
 anyhow = "1.0.75"
 flate2 = "1.0.28"
 indicatif = "0.17.7"
+itertools = "0.12.0"
+rand = "0.8.5"
+webgraph = {git="https://github.com/vigna/webgraph-rs.git", commit="a3deeb47e2d17135f9e4591e469d9bb1252f244c"}
