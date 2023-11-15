@@ -266,7 +266,7 @@ fn parse_eggnog_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) 
         let string_omolog_group = vals.last().unwrap();
         for src in string_omolog_group.split(',') {
             let src = src.to_uppercase();
-            let src_id = vocab.get(&src).unwrap();
+            let src_id = vocab.get(&src).expect(&format!("Could not map {}", &src));
 
             sorted.push(*eggnog_group_id, *src_id)?;
             pl.light_update();

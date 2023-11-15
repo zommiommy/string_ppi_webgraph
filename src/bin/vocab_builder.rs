@@ -240,7 +240,7 @@ fn parse_string_info(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
         if line.starts_with('#') {
             continue;
         }
-        let src = line.split(' ').next().unwrap();
+        let src = line.split('\t').next().unwrap();
         let node_id = vocab.len();
         vocab.entry(src.to_uppercase()).or_insert(node_id);
     }
