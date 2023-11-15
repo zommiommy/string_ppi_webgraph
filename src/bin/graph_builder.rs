@@ -248,7 +248,7 @@ fn parse_eggnog_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) 
     pl.display_memory(true);
     pl.start("Working on e6.og2seqs_and_species.tsv");
     let file = fs::File::open("../e6.og2seqs_and_species.tsv")?;
-    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
+    let gz = io::BufReader::new(file);
 
     for line in gz.lines() {
         let line = line?;
@@ -257,13 +257,13 @@ fn parse_eggnog_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) 
         let ncbi_species = format!("NCBITAXON:{}", vals[0]).to_uppercase();
         let ncbi_species_id = vocab.get(&ncbi_species).unwrap();
 
-        let string_omolog_group = vals.last().unwrap();
         let eggnog_group = format!("EGG:{}", vals[1]).to_uppercase();
         let eggnog_group_id = vocab.get(&eggnog_group).unwrap();
 
         sorted.push(*ncbi_species_id, *eggnog_group_id)?;
         pl.light_update();
 
+        let string_omolog_group = vals.last().unwrap();
         for src in string_omolog_group.split(',') {
             let src = src.to_uppercase();
             let src_id = vocab.get(&src).unwrap();
@@ -273,12 +273,12 @@ fn parse_eggnog_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) 
             sorted.push(*src_id, *eggnog_group_id)?;
             pl.light_update();
 
-            for dst in line.split('\t').skip(2) {
+            for dst in string_omolog_group.split(',') {
                 let dst = dst.to_uppercase();
                 if src == dst {
                     continue;
                 }
-                let dst_id = vocab.get(&dst).unwrap();
+                let dst_id = vocab.get(&dst).expect(&format!("Could not map {}", &dst));
                 sorted.push(*src_id, *dst_id)?;
                 pl.light_update();
             }
@@ -294,7 +294,7 @@ fn parse_kgx_edgelist(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs, f
     pl.display_memory(true);
     pl.start(format!("Working on {}", file));
     let file = fs::File::open(format!("../{}", file))?;
-    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
+    let gz = io::BufReader::new(file);
 
     let mut lines_iter = gz.lines();
 
@@ -360,10 +360,10 @@ pub fn main() -> Result<()> {
     // a batch is 16GBs
     let mut sorted = SortPairs::new(1_000_000_000, temp_dir("/dfd/tmp"))?;
 
+    parse_eggnog_groups(&vocab, &mut sorted)?;
     for file in KGX_FILES {
         parse_kgx_edgelist(&vocab, &mut sorted, file)?;
     }
-    parse_eggnog_groups(&vocab, &mut sorted)?;
     parse_oma_uniprot(&vocab, &mut sorted)?;
     parse_oma_species(&vocab, &mut sorted)?;
     parse_oma_groups(&vocab, &mut sorted)?;
