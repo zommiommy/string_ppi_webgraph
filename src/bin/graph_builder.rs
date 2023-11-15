@@ -339,6 +339,10 @@ pub fn main() -> Result<()> {
         .timestamp(stderrlog::Timestamp::Second)
         .init()
         .unwrap();
+
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Creating the vocabulary");
     
     // load the vocab
     let mut vocab = BTreeMap::new();
@@ -383,5 +387,6 @@ pub fn main() -> Result<()> {
     )
     .unwrap();
 
+    pl.done();
     Ok(())
 }

@@ -6,10 +6,8 @@ use std::io;
 use std::fs;
 use dsi_progress_logger::*;
 use flate2::read::GzDecoder;
-use indicatif::ProgressIterator;
 use std::collections::BTreeMap;
 use anyhow::Result;
-use indicatif::ProgressBar;
 
 fn parse_oma_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     // check that all OMA groups are in the species file
@@ -19,7 +17,7 @@ fn parse_oma_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     let file = fs::File::open("../oma-groups.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with('#') {
             continue;
@@ -41,7 +39,7 @@ fn parse_oma_species(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     let file = fs::File::open("../oma-species.txt")?;
     let gz = io::BufReader::new(file);
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with('#') {
             continue;
@@ -69,7 +67,7 @@ fn parse_oma_uniprot(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     let file = fs::File::open("../oma-uniprot.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with('#') {
             continue;
@@ -92,7 +90,7 @@ fn parse_string_aliases(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     let file = fs::File::open("../protein.aliases.v12.0.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with('#') {
             continue;
@@ -124,7 +122,7 @@ fn parse_string_enrichment_terms(vocab: &mut BTreeMap<String, usize>) -> Result<
     let file = fs::File::open("../protein.enrichment.terms.v12.0.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with('#') {
             continue;
@@ -159,7 +157,7 @@ fn parse_string_links(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     let file = fs::File::open("../protein.links.full.v12.0.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().skip(1).progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines().skip(1) {
         let line = line?;
         if line.starts_with('#') {
             continue;
@@ -232,7 +230,7 @@ fn parse_eggnog_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
 
 fn dump_vocab(vocab: &BTreeMap<String, usize>) -> Result<()> {
     let mut vocab_file = io::BufWriter::new(fs::File::create("../vocab.sorted.tsv")?);
-    for (node_name, node_id) in vocab.iter().progress() {
+    for (node_name, node_id) in vocab.iter() {
         writeln!(vocab_file, "{}\t{}", node_name, node_id)?;
     }
 
@@ -242,7 +240,7 @@ fn dump_vocab(vocab: &BTreeMap<String, usize>) -> Result<()> {
     vocabs.sort_by_key(|(node_id, _)| *node_id);
 
     let mut vocab_file = io::BufWriter::new(fs::File::create("../vocab.tsv")?);
-    for (_, node_name) in vocabs.iter().progress() {
+    for (_, node_name) in vocabs.iter() {
         writeln!(vocab_file, "{}", node_name)?;
     }
     Ok(())
@@ -261,6 +259,16 @@ const KGX_FILES: &[&str] = &[
 ];
 
 pub fn main() -> Result<()> {
+    stderrlog::new()
+        .verbosity(2)
+        .timestamp(stderrlog::Timestamp::Second)
+        .init()
+        .unwrap();
+    
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Creating the vocabulary");
+
     let mut vocab = BTreeMap::new();
     parse_oma_groups(&mut vocab)?;
     println!("vocab size: {}", vocab.len());
@@ -284,5 +292,6 @@ pub fn main() -> Result<()> {
     println!("vocab size: {}", vocab.len());
     dump_vocab(&vocab)?;
 
+    pl.done();
     Ok(())
 }
