@@ -100,10 +100,9 @@ fn parse_string_aliases(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
         if source != "UNIPROT_AC" {
             continue;
         }
-        for node_name in line.split('\t').take(2) {
-            let node_id = vocab.len();
-            vocab.entry(node_name.to_uppercase()).or_insert(node_id);
-        }
+        let node_name = line.split('\t').skip(1).next().unwrap();
+        let node_id = vocab.len();
+        vocab.entry(node_name.to_uppercase()).or_insert(node_id);
         pl.light_update();
     }
     pl.done();
