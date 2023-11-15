@@ -17,10 +17,10 @@ fn check_oma_groups_prefixes() -> Result<()> {
 
     for line in gz.lines() {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
         let oma_code = vals[0];
         oma_codes.insert(oma_code.to_string());
     }
@@ -31,10 +31,10 @@ fn check_oma_groups_prefixes() -> Result<()> {
 
     for line in gz.lines() {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        for candidate_oma_entry in line.split("\t").skip(2) {
+        for candidate_oma_entry in line.split('\t').skip(2) {
             if !oma_codes.contains(&candidate_oma_entry[..5]) {
                 panic!("{}", &candidate_oma_entry[..5]);
             }

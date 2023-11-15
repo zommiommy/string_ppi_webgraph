@@ -55,17 +55,17 @@ fn parse_oma_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> 
 
     for line in gz.lines() {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        for src in line.split("\t").skip(2) {
+        for src in line.split('\t').skip(2) {
 
             let src_id = vocab.get(src).unwrap();
             let src_prefix = vocab.get(&src[..5]).unwrap();
             sorted.push(*src_prefix, *src_id)?;
             pl.light_update();
 
-            for dst in line.split("\t").skip(2) {
+            for dst in line.split('\t').skip(2) {
                 if src == dst {
                     continue;
                 }
@@ -88,10 +88,10 @@ fn parse_oma_species(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) ->
 
     for line in gz.lines() {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
         let oma_code = vals[0];
         let ncbi_code = format!("NCBI:{}", vals[2]);
         
@@ -116,10 +116,10 @@ fn parse_oma_uniprot(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) ->
 
     for line in gz.lines() {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
         let oma_code = vals[0];
         let uniprot_code = vals[1];
         let oma_code_id = vocab.get(oma_code).unwrap();
@@ -143,10 +143,10 @@ fn parse_string_aliases(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs)
 
     for line in gz.lines() {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
         let source = vals[2];
         if source != "UniProt_AC" {
             continue;
@@ -175,10 +175,10 @@ fn parse_string_enrichment_terms(vocab: &BTreeMap<String, usize>, sorted: &mut S
 
     for line in gz.lines() {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
 
         let string_protein = vals[0];
         let string_protein_id = vocab.get(string_protein).unwrap();
@@ -205,10 +205,10 @@ fn parse_string_links(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -
 
     for line in gz.lines().skip(1) {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split(" ").collect::<Vec<_>>();
+        let vals = line.split(' ').collect::<Vec<_>>();
 
         let src = vals[0];
         let src_id = vocab.get(src).unwrap();

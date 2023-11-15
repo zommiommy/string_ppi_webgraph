@@ -18,10 +18,10 @@ fn parse_oma_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
 
     for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        for candidate_oma_entry in line.split("\t").skip(2) {
+        for candidate_oma_entry in line.split('\t').skip(2) {
             let node_id = vocab.len();
             vocab.entry(candidate_oma_entry.to_string()).or_insert(node_id);
         }
@@ -36,10 +36,10 @@ fn parse_oma_species(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
 
     for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
         let oma_code = vals[0];
         let ncbi_code = format!("NCBI:{}", vals[2]);
         
@@ -60,10 +60,10 @@ fn parse_oma_uniprot(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
 
     for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        for node_name in line.split("\t") {
+        for node_name in line.split('\t') {
             let node_id = vocab.len();
             vocab.entry(node_name.to_string()).or_insert(node_id);
         }
@@ -79,15 +79,15 @@ fn parse_string_aliases(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
 
     for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
         let source = vals[2];
         if source != "UniProt_AC" {
             continue;
         }
-        for node_name in line.split("\t").take(2) {
+        for node_name in line.split('\t').take(2) {
             let node_id = vocab.len();
             vocab.entry(node_name.to_string()).or_insert(node_id);
         }
@@ -103,10 +103,10 @@ fn parse_string_enrichment_terms(vocab: &mut BTreeMap<String, usize>) -> Result<
 
     for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split("\t").collect::<Vec<_>>();
+        let vals = line.split('\t').collect::<Vec<_>>();
 
         let string_protein_id = vals[0];
         let node_id = vocab.len();
@@ -128,10 +128,10 @@ fn parse_string_links(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
 
     for line in gz.lines().skip(1).progress_with(ProgressBar::new_spinner()) {
         let line = line?;
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
-        let vals = line.split(" ").collect::<Vec<_>>();
+        let vals = line.split(' ').collect::<Vec<_>>();
         let src = vals[0];
         let node_id = vocab.len();
         vocab.entry(src.to_string()).or_insert(node_id);
