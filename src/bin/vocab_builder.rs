@@ -149,34 +149,6 @@ fn parse_string_enrichment_terms(vocab: &mut BTreeMap<String, usize>) -> Result<
     Ok(())
 }
 
-fn parse_string_links(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
-    // check that all OMA groups are in the species file
-    let mut pl = ProgressLogger::default();
-    pl.display_memory(true);
-    pl.start("Working on protein.links.full.v12.0.txt.gz");
-    let file = fs::File::open("../protein.links.full.v12.0.txt.gz")?;
-    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
-
-    for line in gz.lines().skip(1) {
-        let line = line?;
-        if line.starts_with('#') {
-            continue;
-        }
-        let vals = line.split(' ').collect::<Vec<_>>();
-        let src = vals[0];
-        let node_id = vocab.len();
-        vocab.entry(src.to_uppercase()).or_insert(node_id);
-
-        
-        let dst = vals[1];
-        let node_id = vocab.len();
-        vocab.entry(dst.to_uppercase()).or_insert(node_id);
-        pl.light_update();
-    }
-    pl.done();
-    Ok(())
-}
-
 fn parse_kgx_nodelist(vocab: &mut BTreeMap<String, usize>, file: &str) -> Result<()> {
     // check that all OMA groups are in the species file
     let mut pl = ProgressLogger::default();
@@ -228,6 +200,55 @@ fn parse_eggnog_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     Ok(())
 }
 
+fn parse_string_links(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
+    // check that all OMA groups are in the species file
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on protein.links.full.v12.0.txt.gz");
+    let file = fs::File::open("../protein.links.full.v12.0.txt.gz")?;
+    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
+
+    for line in gz.lines().skip(1) {
+        let line = line?;
+        if line.starts_with('#') {
+            continue;
+        }
+        let vals = line.split(' ').collect::<Vec<_>>();
+        let src = vals[0];
+        let node_id = vocab.len();
+        vocab.entry(src.to_uppercase()).or_insert(node_id);
+
+        
+        let dst = vals[1];
+        let node_id = vocab.len();
+        vocab.entry(dst.to_uppercase()).or_insert(node_id);
+        pl.light_update();
+    }
+    pl.done();
+    Ok(())
+}
+
+fn parse_string_info(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
+    // check that all OMA groups are in the species file
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on protein.info.v12.0.txt.gz");
+    let file = fs::File::open("../protein.info.v12.0.txt.gz")?;
+    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
+
+    for line in gz.lines().skip(1) {
+        let line = line?;
+        if line.starts_with('#') {
+            continue;
+        }
+        let src = line.split(' ').next().unwrap();
+        let node_id = vocab.len();
+        vocab.entry(src.to_uppercase()).or_insert(node_id);
+    }
+    pl.done();
+    Ok(())
+}
+
 fn dump_vocab(vocab: &BTreeMap<String, usize>) -> Result<()> {
     let mut vocab_file = io::BufWriter::new(fs::File::create("../vocab.sorted.tsv")?);
     for (node_name, node_id) in vocab.iter() {
@@ -258,6 +279,36 @@ const KGX_FILES: &[&str] = &[
     "zp_kgx_tsv_nodes.tsv",
 ];
 
+
+/// Given a float, return it in a human readable format using SI suffixes.
+pub fn humanize_float(mut x: f64) -> (f64, &'static str) {
+    const UOM: &[&str] = &[
+        "q", "r", "y", "z", "a", "f", "p", "n", "μ", "m", "", "K", "M", "G", "T", "P", "E", "Z",
+        "Y", "R", "Q",
+    ];
+    let mut uom_idx = 10;
+    debug_assert_eq!(UOM[uom_idx], "");
+
+    if x.abs() > 1.0 {
+        while x.abs() > 1000.0 {
+            uom_idx += 1;
+            x /= 1000.0;
+        }
+    } else {
+        while x.abs() < 0.001 {
+            uom_idx -= 1;
+            x *= 1000.0;
+        }
+    }
+
+    (x, UOM[uom_idx])
+}
+
+pub fn print_vocab(vocab: &BTreeMap<String, usize>) {
+    let (v, uom) = humanize_float(vocab.len() as f64);
+    println!("vocab size: {:.3}{}, {}", v, uom, vocab.len());
+}
+
 pub fn main() -> Result<()> {
     stderrlog::new()
         .verbosity(2)
@@ -270,26 +321,31 @@ pub fn main() -> Result<()> {
     pl.start("Creating the vocabulary");
 
     let mut vocab = BTreeMap::new();
-    parse_oma_groups(&mut vocab)?;
-    println!("vocab size: {}", vocab.len());
-    parse_oma_species(&mut vocab)?;
-    println!("vocab size: {}", vocab.len());
-    parse_oma_uniprot(&mut vocab)?;
-    println!("vocab size: {}", vocab.len());
-    parse_eggnog_groups(&mut vocab)?;
-    println!("vocab size: {}", vocab.len());
 
-    for file in KGX_FILES {
-        parse_kgx_nodelist(&mut vocab, file)?;
-        println!("vocab size: {}", vocab.len());
-    }
+    parse_string_info(&mut vocab)?;
+    //parse_string_links(&mut vocab)?;
+    print_vocab(&vocab);
 
     parse_string_aliases(&mut vocab)?;
-    println!("vocab size: {}", vocab.len());
+    print_vocab(&vocab);
     parse_string_enrichment_terms(&mut vocab)?;
-    println!("vocab size: {}", vocab.len());
-    parse_string_links(&mut vocab)?;
-    println!("vocab size: {}", vocab.len());
+    print_vocab(&vocab);
+    
+    for file in KGX_FILES {
+        parse_kgx_nodelist(&mut vocab, file)?;
+        print_vocab(&vocab);
+    }
+
+    parse_oma_groups(&mut vocab)?;
+    print_vocab(&vocab);
+    parse_oma_species(&mut vocab)?;
+    print_vocab(&vocab);
+    parse_oma_uniprot(&mut vocab)?;
+    print_vocab(&vocab);
+
+    parse_eggnog_groups(&mut vocab)?;
+    print_vocab(&vocab);
+
     dump_vocab(&vocab)?;
 
     pl.done();
