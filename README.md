@@ -2,7 +2,23 @@
 Experiments on merging and compressing the whole inter-species string ppi graph using webgraph-rs
 
 # Sources
-Needed files from [string ppi](https://string-db.org/cgi/download?sessionId=btvSejFLpDnW):
+
+```python
+from downloaders import BaseDownloader
+downloader = BaseDownloader()
+_ = downloader.download("https://omabrowser.org/All/oma-uniprot.txt.gz")
+_ = downloader.download("https://omabrowser.org/All/oma-species.txt")
+_ = downloader.download("https://omabrowser.org/All/oma-groups.txt.gz")
+_ = downloader.download("https://omabrowser.org/All/oma-groups.txt.gz")
+_ = downloader.download("http://eggnog6.embl.de/download/eggnog_6.0/e6.og2seqs_and_species.tsv")
+_ = downloader.download("https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz")
+_ = downloader.download("https://kg-hub.berkeleybop.io/kg-obo/go/2023-03-06/go_kgx_tsv.tar.gz")
+_ = downloader.download("https://stringdb-downloads.org/download/protein.aliases.v12.0.txt.gz")
+_ = downloader.download("https://stringdb-downloads.org/download/protein.enrichment.terms.v12.0.txt.gz")
+_ = downloader.download("https://stringdb-downloads.org/download/protein.links.full.v12.0.txt.gz")
+```
+
+Needed files from [string ppi](https://string-db.org/cgi/download):
 * [`protein.links.full.v12.0.txt.gz`](https://stringdb-downloads.org/download/protein.links.full.v12.0.txt.gz) 200GB
 ```
 protein1 protein2 neighborhood neighborhood_transferred fusion cooccurence homology coexpression coexpression_transferred experiments experiments_transferred database database_transferred textmining textmining_transferred combined_score
@@ -29,7 +45,7 @@ protein1 protein2 neighborhood neighborhood_transferred fusion cooccurence homol
 100053.GCA_002009845_00001	Biological Process (Gene Ontology)	GO:0008616	Queuosine biosynthetic process
 100053.GCA_002009845_00001	Biological Process (Gene Ontology)	GO:0009058	Biosynthetic process
 ```
-* [`protein.aliases.v12.0.txt.gz`]()
+* [`protein.aliases.v12.0.txt.gz`](https://stringdb-downloads.org/download/protein.aliases.v12.0.txt.gz)
 ```
 #string_protein_id	alias	source
 23.BEL05_00025	23	RefSeq_xref_taxon
@@ -95,4 +111,24 @@ ARCFU00014	A0A101DFH3
 314146  4R1PQ   2       2       61622,336983    336983.ENSCANP00000020242,61622.ENSRROP00000005057
 314146  4R1PR   2       2       591936,336983   336983.ENSCANP00000031012,591936.ENSPTEP00000036989
 314146  4R1PS   2       2       61621,336983    336983.ENSCANP00000038913,61621.ENSRBIP00000035373
+```
+* [`uniprot_sprot.dat.gz`](https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz)
+```
+ID   001R_FRG3G              Reviewed;         256 AA.
+AC   Q6GZX4;
+DT   28-JUN-2011, integrated into UniProtKB/Swiss-Prot.
+DT   19-JUL-2004, sequence version 1.
+DT   08-NOV-2023, entry version 44.
+DE   RecName: Full=Putative transcription factor 001R;
+GN   ORFNames=FV3-001R;
+OS   Frog virus 3 (isolate Goorha) (FV-3).
+OC   Viruses; Varidnaviria; Bamfordvirae; Nucleocytoviricota; Megaviricetes;
+OC   Pimascovirales; Iridoviridae; Alphairidovirinae; Ranavirus; Frog virus 3.
+```
+* [`go_kgx_tsv.tar.gz`](https://kg-hub.berkeleybop.io/kg-obo/go/2023-03-06/go_kgx_tsv.tar.gz)
+```
+././@PaxHeader0000000000000000000000000000003400000000000010212 xustar0028 mtime=1678522367.0296366                                                
+go_kgx_tsv_nodes.tsv0000644000016200001700011727261714403033777014446 0ustar00jenkinsuserid     category        name    description     xrefprovided_by     synonym iri     same_as subsets                                                                                                           
+ GO:0099593      biolink:BiologicalProcess       endocytosed synaptic vesicle to endosome fusion Fusion of an endocytosed synaptic vesicle with an endosome.         go.json         http://purl.obolibrary.org/obo/GO_0099593                                                                         
+ GO:0099592      biolink:BiologicalProcess       endocytosed synaptic vesicle processing via endosome    The process in which endocytosed synaptic vesicles fuse to the presynaptic endosome followed by sorting of synaptic vesicle components and budding of new synaptic vesicles.   go.json  synaptic vesicle processing via endosome involved in synaptic vesicle recycling http://purl.obolibrary.org/obo/GO_0099592     
 ```
