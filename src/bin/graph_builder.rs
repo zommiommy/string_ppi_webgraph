@@ -13,7 +13,7 @@ use std::io;
 use std::fs;
 use anyhow::Result;
 use flate2::read::GzDecoder;
-use indicatif::{ProgressBar, ProgressIterator};
+use dsi_progress_logger::*;
 
 use webgraph::prelude::*;
 use webgraph::graph::arc_list_graph::ArcListGraph;
@@ -47,11 +47,13 @@ pub fn temp_dir<P: AsRef<Path>>(base: P) -> String {
 
 fn parse_oma_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
     // check that all OMA groups are in the species file
-    println!("Working on oma-groups.txt.gz");
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on oma-groups.txt.gz");
     let file = fs::File::open("../oma-groups.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with("#") {
             continue;
@@ -61,6 +63,7 @@ fn parse_oma_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> 
             let src_id = vocab.get(src).unwrap();
             let src_prefix = vocab.get(&src[..5]).unwrap();
             sorted.push(*src_prefix, *src_id)?;
+            pl.light_update();
 
             for dst in line.split("\t").skip(2) {
                 if src == dst {
@@ -68,18 +71,22 @@ fn parse_oma_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> 
                 }
                 let dst_id = vocab.get(dst).unwrap();
                 sorted.push(*src_id, *dst_id)?;
+                pl.light_update();
             }
         }
     }
+    pl.done();
     Ok(())
 }
 
 fn parse_oma_species(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
-    println!("Working on oma-species.txt");
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on oma-species.txt");
     let file = fs::File::open("../oma-species.txt")?;
     let gz = io::BufReader::new(file);
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with("#") {
             continue;
@@ -92,41 +99,49 @@ fn parse_oma_species(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) ->
         let ncbi_code = vocab.get(&ncbi_code).unwrap();
         sorted.push(*oma_code, *ncbi_code)?;
         sorted.push(*ncbi_code, *oma_code)?;
+        pl.light_update();
     }
+    pl.done();
 
     Ok(())
 }
 
 fn parse_oma_uniprot(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
     // check that all OMA groups are in the species file
-    println!("Working on oma-uniprot.txt.gz");
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on oma-uniprot.txt.gz");
     let file = fs::File::open("../oma-uniprot.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with("#") {
             continue;
         }
         let vals = line.split("\t").collect::<Vec<_>>();
         let oma_code = vals[0];
-        let uniprot_code = vals[2];
+        let uniprot_code = vals[1];
         let oma_code_id = vocab.get(oma_code).unwrap();
         let uniprot_code_id = vocab.get(uniprot_code).unwrap();
 
         sorted.push(*oma_code_id, *uniprot_code_id)?;
         sorted.push(*uniprot_code_id, *oma_code_id)?;
+        pl.light_update();
     }
+    pl.done();
     Ok(())
 }
 
 fn parse_string_aliases(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
     // check that all OMA groups are in the species file
-    println!("Working on protein.aliases.v12.0.txt.gz");
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on protein.aliases.v12.0.txt.gz");
     let file = fs::File::open("../protein.aliases.v12.0.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with("#") {
             continue;
@@ -141,19 +156,24 @@ fn parse_string_aliases(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs)
         let uniprot_code = vals[1];
         let uniprot_code_id = vocab.get(uniprot_code).unwrap();
         sorted.push(*string_code_id, *uniprot_code_id)?;
+        pl.light_update();
         sorted.push(*uniprot_code_id, *string_code_id)?;
+        pl.light_update();
     }
+    pl.done();
     Ok(())
 }
 
 
 fn parse_string_enrichment_terms(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
     // check that all OMA groups are in the species file
-    println!("Working on protein.enrichment.terms.v12.0.txt.gz");
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on protein.enrichment.terms.v12.0.txt.gz");
     let file = fs::File::open("../protein.enrichment.terms.v12.0.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines() {
         let line = line?;
         if line.starts_with("#") {
             continue;
@@ -167,18 +187,23 @@ fn parse_string_enrichment_terms(vocab: &BTreeMap<String, usize>, sorted: &mut S
         let go_term_id = vocab.get(go_term).unwrap();
 
         sorted.push(*string_protein_id, *go_term_id)?;
+        pl.light_update();
         sorted.push(*go_term_id, *string_protein_id)?;
+        pl.light_update();
     }
+    pl.done();
     Ok(())
 }
 
 fn parse_string_links(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
     // check that all OMA groups are in the species file
-    println!("Working on protein.links.full.v12.0.txt.gz");
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on protein.links.full.v12.0.txt.gz");
     let file = fs::File::open("../protein.links.full.v12.0.txt.gz")?;
     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().skip(1).progress_with(ProgressBar::new_spinner()) {
+    for line in gz.lines().skip(1) {
         let line = line?;
         if line.starts_with("#") {
             continue;
@@ -193,26 +218,39 @@ fn parse_string_links(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -
         
         // this file ***SHOULD*** be already undirected
         sorted.push(*src_id, *dst_id)?;
+        pl.light_update();
         //sorted.push(*dst_id, *src_id)?;
     }
+    pl.done();
     Ok(())
 }
 
 pub fn main() -> Result<()> {
+    stderrlog::new()
+        .verbosity(2)
+        .timestamp(stderrlog::Timestamp::Second)
+        .init()
+        .unwrap();
+    
     // load the vocab
     let mut vocab = BTreeMap::new();
     let f = std::io::BufReader::new(std::fs::File::open("../vocab.tsv")?);
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Loading vocab");
     for (node_id, num_node) in f.lines().enumerate() {
         let num_node = num_node?;
         vocab.insert(num_node, node_id);
+        pl.light_update();
     }
+    pl.done();
     let num_nodes = vocab.len();
     // a batch is 16GBs
-    let mut sorted = SortPairs::new(1_000_000_000, temp_dir(std::env::temp_dir()))?;
+    let mut sorted = SortPairs::new(1_000_000_000, temp_dir("/dfd/tmp"))?;
 
-    parse_oma_groups(&vocab, &mut sorted)?;
-    parse_oma_species(&vocab, &mut sorted)?;
     parse_oma_uniprot(&vocab, &mut sorted)?;
+    parse_oma_species(&vocab, &mut sorted)?;
+    parse_oma_groups(&vocab, &mut sorted)?;
     parse_string_aliases(&vocab, &mut sorted)?;
     parse_string_enrichment_terms(&vocab, &mut sorted)?;
     parse_string_links(&vocab, &mut sorted)?;
@@ -229,7 +267,7 @@ pub fn main() -> Result<()> {
         num_nodes,
         CompFlags::default(),
         1,
-        temp_dir(std::env::temp_dir()),
+        temp_dir("/dfd/tmp"),
     )
     .unwrap();
 

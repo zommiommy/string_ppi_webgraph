@@ -165,16 +165,17 @@ fn dump_vocab(vocab: &BTreeMap<String, usize>) -> Result<()> {
 pub fn main() -> Result<()> {
     let mut vocab = BTreeMap::new();
     parse_oma_groups(&mut vocab)?;
-    dump_vocab(&vocab)?;
+    println!("vocab size: {}", vocab.len());
     parse_oma_species(&mut vocab)?;
-    dump_vocab(&vocab)?;
+    println!("vocab size: {}", vocab.len());
     parse_oma_uniprot(&mut vocab)?;
-    dump_vocab(&vocab)?;
+    println!("vocab size: {}", vocab.len());
     parse_string_aliases(&mut vocab)?;
-    dump_vocab(&vocab)?;
+    println!("vocab size: {}", vocab.len());
     parse_string_enrichment_terms(&mut vocab)?;
-    dump_vocab(&vocab)?;
+    println!("vocab size: {}", vocab.len());
     parse_string_links(&mut vocab)?;
+    println!("vocab size: {}", vocab.len());
     dump_vocab(&vocab)?;
 
     Ok(())
