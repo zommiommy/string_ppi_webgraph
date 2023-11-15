@@ -210,6 +210,11 @@ fn parse_string_links(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -
         }
         let vals = line.split(' ').collect::<Vec<_>>();
 
+        let combined_score = vals.last().unwrap();
+        if combined_score.parse::<usize>().unwrap() < 700 {
+            continue;
+        }
+
         let src = vals[0];
         let src_id = vocab.get(src).unwrap();
         
