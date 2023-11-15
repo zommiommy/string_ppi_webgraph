@@ -4,21 +4,51 @@ Experiments on merging and compressing the whole inter-species string ppi graph 
 # Sources
 
 ```python
+urls = [
+    "https://omabrowser.org/All/oma-uniprot.txt.gz",
+    "https://omabrowser.org/All/oma-species.txt",
+    "https://omabrowser.org/All/oma-groups.txt.gz",
+
+    "http://eggnog6.embl.de/download/eggnog_6.0/e6.og2seqs_and_species.tsv",
+
+    "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz",
+
+    "https://kg-hub.berkeleybop.io/kg-obo/ncbitaxon/2023-09-14/ncbitaxon_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/go/2023-03-06/go_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/bto/2021-10-26/bto_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/cl/2023-10-19/cl_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/doid/2023-10-21/doid_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/fbcv/2023-10-19/fbcv_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/hp/2023-10-09/hp_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/mp/2021-11-04/mp_kgx_tsv.tar.gz",
+    "https://kg-hub.berkeleybop.io/kg-obo/zp/2022-12-17/zp_kgx_tsv.tar.gz",
+
+    "https://stringdb-downloads.org/download/protein.info.v12.0.txt.gz",
+    "https://stringdb-downloads.org/download/protein.aliases.v12.0.txt.gz",
+    "https://stringdb-downloads.org/download/protein.enrichment.terms.v12.0.txt.gz",
+    "https://stringdb-downloads.org/download/protein.links.full.v12.0.txt.gz",
+]
+
 from downloaders import BaseDownloader
 downloader = BaseDownloader()
-_ = downloader.download("https://omabrowser.org/All/oma-uniprot.txt.gz")
-_ = downloader.download("https://omabrowser.org/All/oma-species.txt")
-_ = downloader.download("https://omabrowser.org/All/oma-groups.txt.gz")
-_ = downloader.download("https://omabrowser.org/All/oma-groups.txt.gz")
-_ = downloader.download("http://eggnog6.embl.de/download/eggnog_6.0/e6.og2seqs_and_species.tsv")
-_ = downloader.download("https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz")
-_ = downloader.download("https://kg-hub.berkeleybop.io/kg-obo/go/2023-03-06/go_kgx_tsv.tar.gz")
-_ = downloader.download("https://stringdb-downloads.org/download/protein.aliases.v12.0.txt.gz")
-_ = downloader.download("https://stringdb-downloads.org/download/protein.enrichment.terms.v12.0.txt.gz")
-_ = downloader.download("https://stringdb-downloads.org/download/protein.links.full.v12.0.txt.gz")
+for url in urls:
+    _ = downloader.download(url)
 ```
 
 Needed files from [string ppi](https://string-db.org/cgi/download):
+* [`protein.info.v12.0.txt.gz`](https://stringdb-downloads.org/download/protein.info.v12.0.txt.gz)
+```
+#string_protein_id      preferred_name  protein_size    annotation                                                                   
+23.BEL05_00025  BEL05_00025     429     Hypothetical protein; Incomplete; too short partial abutting assembly gap; missing start and stop; Derived by automated computational analysis using gene prediction method: GeneMarkS+.                                          
+23.BEL05_00030  OEG73659.1      203     2-keto-4-pentenoate hydratase; Derived by automated computational analysis using gene prediction method: Protein Homology.                                                                                                        
+23.BEL05_00035  OEG73660.1      1140    Hybrid sensor histidine kinase/response regulator; Derived by automated computational analysis using gene prediction method: Protein Homology.                                                                                    
+23.BEL05_00040  acsA    650     acetate--CoA ligase; Catalyzes the conversion of acetate into acetyl-CoA (AcCoA), an essential intermediate at the junction of anabolic and catabolic pathways. AcsA undergoes a two-step reaction. In the first half reaction, AcsA combines acetate with ATP to form acetyl-adenylate (AcAMP) intermediate. In the second half reaction, it can then transfer the acetyl group from AcAMP to the sulfhydryl group of CoA, forming the product AcCoA; Belongs to the ATP-dependent AMP-binding enzyme family.      
+23.BEL05_00045  OEG73662.1      579     ATP-dependent helicase; Derived by automated computational analysis using gene prediction method: Protein Homology.                                                                                                               
+23.BEL05_00050  OEG73663.1      85      Glutaredoxin; Functions as an electron carrier in the glutathione-dependent synthesis of deoxyribonucleotides by the enzyme ribonucleotide reductase; also involved in reducing some disulfides in a coupled system with glutathione reductase; Derived by automated computational analysis using gene prediction method: Protein Homology.                            
+23.BEL05_00055  OEG73664.1      380     Porin; Derived by automated computational analysis using gene prediction method: Protein Homology.                                                                                                                                
+23.BEL05_00070  cpoB    241     Tol-pal system protein YbgF; Mediates coordination of peptidoglycan synthesis and outer membrane constriction during cell division; Belongs to the CpoB family.                                                                           
+23.BEL05_00075  pal     180     Peptidoglycan-associated lipoprotein; Part of the Tol-Pal system, which plays a role in outer membrane invagination during cell division and is important for maintaining outer membrane integrity.                                       
+```
 * [`protein.links.full.v12.0.txt.gz`](https://stringdb-downloads.org/download/protein.links.full.v12.0.txt.gz) 200GB
 ```
 protein1 protein2 neighborhood neighborhood_transferred fusion cooccurence homology coexpression coexpression_transferred experiments experiments_transferred database database_transferred textmining textmining_transferred combined_score
@@ -126,9 +156,32 @@ OC   Viruses; Varidnaviria; Bamfordvirae; Nucleocytoviricota; Megaviricetes;
 OC   Pimascovirales; Iridoviridae; Alphairidovirinae; Ranavirus; Frog virus 3.
 ```
 * [`go_kgx_tsv.tar.gz`](https://kg-hub.berkeleybop.io/kg-obo/go/2023-03-06/go_kgx_tsv.tar.gz)
+`go_kgx_tsv_edges.tsv`
+`go_kgx_tsv_nodes.tsv`
+
+* [`ncbitaxon_kgx_tsv.tar.gz`](https://kg-hub.berkeleybop.io/kg-obo/ncbitaxon/2023-09-14/ncbitaxon_kgx_tsv.tar.gz)
+`ncbitaxon_kgx_tsv_edges.tsv`
 ```
-././@PaxHeader0000000000000000000000000000003400000000000010212 xustar0028 mtime=1678522367.0296366                                                
-go_kgx_tsv_nodes.tsv0000644000016200001700011727261714403033777014446 0ustar00jenkinsuserid     category        name    description     xrefprovided_by     synonym iri     same_as subsets                                                                                                           
- GO:0099593      biolink:BiologicalProcess       endocytosed synaptic vesicle to endosome fusion Fusion of an endocytosed synaptic vesicle with an endosome.         go.json         http://purl.obolibrary.org/obo/GO_0099593                                                                         
- GO:0099592      biolink:BiologicalProcess       endocytosed synaptic vesicle processing via endosome    The process in which endocytosed synaptic vesicles fuse to the presynaptic endosome followed by sorting of synaptic vesicle components and budding of new synaptic vesicles.   go.json  synaptic vesicle processing via endosome involved in synaptic vesicle recycling http://purl.obolibrary.org/obo/GO_0099592     
+id      subject predicate       object  relation        knowledge_source                                                                  
+urn:uuid:8ba9a91f-c534-4371-a789-8a3e676ca1b7   NCBITaxon:1252590       biolink:subclass_of     NCBITaxon:173037        rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:4e7b5a22-12ba-4d0d-bca1-8d60b583b02e   NCBITaxon:1252591       biolink:subclass_of     NCBITaxon:173037        rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:62b750fc-4633-4860-8e5e-cb0456f7a71c   NCBITaxon:1252592       biolink:subclass_of     NCBITaxon:173037        rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:7859d3ce-b49b-44c6-9160-7b5af01f5dc8   NCBITaxon:1252593       biolink:subclass_of     NCBITaxon:2633401       rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:0f86d260-c6e3-41d8-9b38-98733e23cedc   NCBITaxon:1252594       biolink:subclass_of     NCBITaxon:173037        rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:abeae0d5-72a5-43de-950d-2f11e3e15c93   NCBITaxon:1252595       biolink:subclass_of     NCBITaxon:632588        rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:6f751bf1-3de7-4df3-a3f2-0a4576e821c1   NCBITaxon:1252596       biolink:subclass_of     NCBITaxon:632221        rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:27b0201b-9d86-4d55-908e-7defcbb34da5   NCBITaxon:1252597       biolink:subclass_of     NCBITaxon:632256        rdfs:subClassOf NCBITAXON 2023-09-14                                                                                                                        
+urn:uuid:270736fb-298e-4601-9513-2615b6bbc368   NCBITaxon:1252598       biolink:subclass_of     NCBITaxon:274104        rdfs:subClassOf NCBITAXON 2023-09-14         
 ```
+`ncbitaxon_kgx_tsv_nodes.tsv`
+```
+id      category        name    description     xref    provided_by     synonym iri     same_as                                           
+NCBITaxon:1252590       biolink:OrganismalEntity        Ichneumonidae sp. BOLD:AAG9159          GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252590                                                                                                    
+NCBITaxon:1252591       biolink:OrganismalEntity        Ichneumonidae sp. ASWA193-08            GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252591                                                                                                    
+NCBITaxon:1252592       biolink:OrganismalEntity        Ichneumonidae sp. BOLD:AAH1531          GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252592                                                                                                    
+NCBITaxon:1252593       biolink:OrganismalEntity        Stibeutes sp. BOLD:ABZ5036              GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252593                                                                                                    
+NCBITaxon:1252594       biolink:OrganismalEntity        Ichneumonidae sp. BOLD:AAH2156          GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252594                                                                                                    
+NCBITaxon:1252595       biolink:OrganismalEntity        Mesochorinae sp. BOLD:AAH1799           GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252595                                                                                                    
+NCBITaxon:1252596       biolink:OrganismalEntity        Alysiinae sp. ASWAT849-08               GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252596                                                                                                    
+NCBITaxon:1252597       biolink:OrganismalEntity        Campopleginae sp. BOLD:AAF8320          GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252597                                                                                                    
+NCBITaxon:1252598       biolink:OrganismalEntity        Cryptinae sp. BOLD:ABZ0478              GC_ID:1 ncbitaxon.json          http://purl.obolibrary.org/obo/NCBITaxon_1252598```     

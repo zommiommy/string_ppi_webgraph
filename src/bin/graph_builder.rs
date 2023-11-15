@@ -93,7 +93,7 @@ fn parse_oma_species(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) ->
         }
         let vals = line.split('\t').collect::<Vec<_>>();
         let oma_code = vals[0];
-        let ncbi_code = format!("NCBI:{}", vals[2]);
+        let ncbi_code = format!("NCBITaxon:{}", vals[2]);
         
         let oma_code = vocab.get(oma_code).unwrap();
         let ncbi_code = vocab.get(&ncbi_code).unwrap();
@@ -230,6 +230,90 @@ fn parse_string_links(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -
     Ok(())
 }
 
+
+fn parse_eggnog_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
+    // check that all OMA groups are in the species file
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start("Working on e6.og2seqs_and_species.tsv");
+    let file = fs::File::open("../e6.og2seqs_and_species.tsv")?;
+    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
+
+    for line in gz.lines() {
+        let line = line?;
+        let vals: Vec<&str> = line.split('\t').collect::<Vec<_>>();
+
+        let ncbi_species = format!("NCBITaxon:{}", vals[0]);
+        let ncbi_species_id = vocab.get(&ncbi_species).unwrap();
+
+        let string_omolog_group = vals.last().unwrap();
+        let eggnog_group = format!("EGG:{}", vals[1]);
+        let eggnog_group_id = vocab.get(&eggnog_group).unwrap();
+
+        sorted.push(*ncbi_species_id, *eggnog_group_id)?;
+        pl.light_update();
+
+        for src in string_omolog_group.split(',') {
+
+            let src_id = vocab.get(src).unwrap();
+
+            sorted.push(*eggnog_group_id, *src_id)?;
+            pl.light_update();
+            sorted.push(*src_id, *eggnog_group_id)?;
+            pl.light_update();
+
+            for dst in line.split('\t').skip(2) {
+                if src == dst {
+                    continue;
+                }
+                let dst_id = vocab.get(dst).unwrap();
+                sorted.push(*src_id, *dst_id)?;
+                pl.light_update();
+            }
+        }
+    }
+    pl.done();
+    Ok(())
+}
+
+fn parse_kgx_edgelist(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs, file: &str) -> Result<()> {
+    // check that all OMA groups are in the species file
+    let mut pl = ProgressLogger::default();
+    pl.display_memory(true);
+    pl.start(format!("Working on {}", file));
+    let file = fs::File::open(format!("../{}", file))?;
+    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
+
+    let mut lines_iter = gz.lines();
+
+    let header = lines_iter.next().unwrap()?;
+    let vals: Vec<&str> = header.split('\t').collect::<Vec<_>>();
+    assert_eq!(vals[1], "subject");
+    assert_eq!(vals[3], "object");
+
+    for line in lines_iter {
+        let line = line?;
+        let vals: Vec<&str> = line.split('\t').collect::<Vec<_>>();
+
+        let subject = vals[1];
+        let subject_id = vocab.get(subject).unwrap();
+
+        let object = vals[3];
+        let object_id = vocab.get(object).unwrap();
+
+        sorted.push(*subject_id, *object_id)?;
+        pl.light_update();
+    }
+    pl.done();
+
+    Ok(())
+}
+
+const KGX_FILES: &[&str] = &[
+    "go_kgx_tsv_edges.tsv",
+    "ncbitaxon_kgx_tsv_edges.tsv",
+];
+
 pub fn main() -> Result<()> {
     stderrlog::new()
         .verbosity(2)
@@ -253,6 +337,10 @@ pub fn main() -> Result<()> {
     // a batch is 16GBs
     let mut sorted = SortPairs::new(1_000_000_000, temp_dir("/dfd/tmp"))?;
 
+    for file in KGX_FILES {
+        parse_kgx_edgelist(&vocab, &mut sorted, file)?;
+    }
+    parse_eggnog_groups(&vocab, &mut sorted)?;
     parse_oma_uniprot(&vocab, &mut sorted)?;
     parse_oma_species(&vocab, &mut sorted)?;
     parse_oma_groups(&vocab, &mut sorted)?;

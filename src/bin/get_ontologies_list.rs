@@ -31,10 +31,25 @@ fn parse_string_enrichment_terms(ontologie_codes: &mut BTreeSet<String>) -> Resu
         let ontology_node_name = line.split('\t').take(3).collect::<Vec<_>>()[2];
 
         // We get the prefix of the ontology code
-        let ontology_code = ontology_node_name.split(':').collect::<Vec<_>>()[0];
+        let ontology_code = if ontology_node_name.contains('-') {
+            ontology_node_name.split('-').collect::<Vec<_>>()[0]
+        } else if ontology_node_name.starts_with("IPR") {
+            "IPR"
+        } else if ontology_node_name.starts_with("PF") {
+            "PF"
+        } else if ontology_node_name.starts_with("SM") {
+            "SM"
+        } else if ontology_node_name.starts_with("WP") {
+            "WP"
+        } else if ontology_node_name.contains(':') {
+            ontology_node_name.split(':').collect::<Vec<_>>()[0]
+        } else {
+            unreachable!("how to split {}", ontology_node_name)
+        };
 
         // We insert the ontology code in the set
         ontologie_codes.insert(ontology_code.to_string());
+        pl.light_update();
     }
     pl.done();
     Ok(())
