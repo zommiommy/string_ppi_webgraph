@@ -1,11 +1,10 @@
-
-use std::collections::{HashMap, BTreeMap};
-use std::io::prelude::*;
-use std::io;
-use std::fs;
 use anyhow::Result;
-use flate2::read::GzDecoder;
 use dsi_progress_logger::*;
+use flate2::read::GzDecoder;
+use std::collections::BTreeMap;
+use std::fs;
+use std::io;
+use std::io::prelude::*;
 
 fn eggnogg_stats() -> Result<()> {
     // check that all OMA groups are in the species file
@@ -14,10 +13,9 @@ fn eggnogg_stats() -> Result<()> {
     pl.start("Working on e6.og2seqs_and_species.tsv");
     let mut dist_raw: BTreeMap<usize, usize> = BTreeMap::new();
     let mut dist_edges: BTreeMap<usize, usize> = BTreeMap::new();
-    
+
     let file = fs::File::open("../e6.og2seqs_and_species.tsv")?;
     let gz = io::BufReader::new(file);
-
 
     for line in gz.lines() {
         let line = line?;
@@ -45,7 +43,7 @@ fn eggnogg_stats() -> Result<()> {
 fn oma_stats() -> Result<()> {
     let mut dist_raw: BTreeMap<usize, usize> = BTreeMap::new();
     let mut dist_edges: BTreeMap<usize, usize> = BTreeMap::new();
-    
+
     let mut pl = ProgressLogger::default();
     pl.display_memory(true);
     pl.start("Working on oma-groups.txt.gz");
@@ -59,7 +57,7 @@ fn oma_stats() -> Result<()> {
         }
         let group_len = line.split('\t').skip(2).count();
         let num_edges = group_len + (group_len * (group_len - 1)) + 1;
-        
+
         *dist_raw.entry(group_len).or_insert(0) += 1;
         *dist_edges.entry(num_edges).or_insert(0) += 1;
     }
@@ -83,6 +81,6 @@ pub fn main() -> Result<()> {
         .init()?;
 
     oma_stats()?;
+    eggnogg_stats()?;
     Ok(())
-
 }

@@ -1,27 +1,26 @@
 //! Using the pre-built vocab.tsv, merge all files into a graph
 //!
-//! you may want to increase the maximum number of open files, expecially if 
+//! you may want to increase the maximum number of open files, expecially if
 //! your batch_size is small, i.e. you have little RAM
 //! ```
 //! sudo sysctl -w fs.file-max=10000000
 //! ```
 
-
-use std::collections::BTreeMap;
-use std::io::prelude::*;
-use std::io;
-use std::fs;
 use anyhow::Result;
-use flate2::read::GzDecoder;
 use dsi_progress_logger::*;
+use flate2::read::GzDecoder;
+use std::collections::BTreeMap;
+use std::fs;
+use std::io;
+use std::io::prelude::*;
 
-use webgraph::prelude::*;
 use webgraph::graph::arc_list_graph::ArcListGraph;
 use webgraph::graph::bvgraph::parallel_compress_sequential_iter;
+use webgraph::prelude::*;
 
+use itertools::{Dedup, Itertools};
 use rand::Rng;
 use std::path::Path;
-use itertools::{Dedup, Itertools};
 
 /// Create a new random dir inside the given folder
 pub fn temp_dir<P: AsRef<Path>>(base: P) -> String {
@@ -58,22 +57,36 @@ fn parse_oma_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> 
         if line.starts_with('#') {
             continue;
         }
-        for src in line.split('\t').skip(2) {
+
+        let line_iterator = line.split('\t');
+        let oma_group = line_iterator.clone().next().unwrap();
+        let oma_group_node_name = format!("OMA:{}", oma_group);
+        let oma_group_id = vocab.get(&oma_group_node_name).unwrap();
+
+        for src in line_iterator.skip(1) {
             let src = src.to_uppercase();
             let src_id = vocab.get(&src).unwrap();
             let src_prefix = vocab.get(&src[..5]).unwrap();
             sorted.push(*src_prefix, *src_id)?;
             pl.light_update();
+            sorted.push(*src_id, *oma_group_id)?;
+            pl.light_update();
+            sorted.push(*oma_group_id, *src_id)?;
+            pl.light_update();
 
-            for dst in line.split('\t').skip(2) {
-                let dst = dst.to_uppercase();
-                if src == dst {
-                    continue;
-                }
-                let dst_id = vocab.get(&dst).unwrap();
-                sorted.push(*src_id, *dst_id)?;
-                pl.light_update();
-            }
+            // We have switched from a clique representation
+            // to a star representation so we don't need to add
+            // all the edges.
+            //
+            // for dst in line.split('\t').skip(2) {
+            //     let dst = dst.to_uppercase();
+            //     if src == dst {
+            //         continue;
+            //     }
+            //     let dst_id = vocab.get(&dst).unwrap();
+            //     sorted.push(*src_id, *dst_id)?;
+            //     pl.light_update();
+            // }
         }
     }
     pl.done();
@@ -95,7 +108,7 @@ fn parse_oma_species(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) ->
         let vals = line.split('\t').collect::<Vec<_>>();
         let oma_code = vals[0].to_uppercase();
         let ncbi_code = format!("NCBITAXON:{}", vals[2]).to_uppercase();
-        
+
         let oma_code = vocab.get(&oma_code).unwrap();
         let ncbi_code = vocab.get(&ncbi_code).unwrap();
         sorted.push(*oma_code, *ncbi_code)?;
@@ -165,12 +178,12 @@ fn parse_string_aliases(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs)
     Ok(())
 }
 
+const ENRICHMENT_FILTER: &[&str] = &["BTO", "CL", "DOID", "FBCV", "GO", "HP", "MP", "ZP"];
 
-const ENRICHMENT_FILTER: &[&str] = &[
-    "BTO","CL","DOID","FBCV","GO","HP","MP","ZP"
-];
-
-fn parse_string_enrichment_terms(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
+fn parse_string_enrichment_terms(
+    vocab: &BTreeMap<String, usize>,
+    sorted: &mut SortPairs,
+) -> Result<()> {
     // check that all OMA groups are in the species file
     let mut pl = ProgressLogger::default();
     pl.display_memory(true);
@@ -193,7 +206,7 @@ fn parse_string_enrichment_terms(vocab: &BTreeMap<String, usize>, sorted: &mut S
         for term_filter in ENRICHMENT_FILTER {
             if term.starts_with(term_filter) {
                 let term_id = vocab.get(&term).unwrap();
-        
+
                 sorted.push(*string_protein_id, *term_id)?;
                 pl.light_update();
                 sorted.push(*term_id, *string_protein_id)?;
@@ -228,10 +241,10 @@ fn parse_string_links(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -
 
         let src = vals[0].to_uppercase();
         let src_id = vocab.get(&src).unwrap();
-        
+
         let dst = vals[1].to_uppercase();
         let dst_id = vocab.get(&dst).unwrap();
-        
+
         // this file ***SHOULD*** be already undirected
         sorted.push(*src_id, *dst_id)?;
         pl.light_update();
@@ -240,7 +253,6 @@ fn parse_string_links(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -
     pl.done();
     Ok(())
 }
-
 
 fn parse_eggnog_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> Result<()> {
     // check that all OMA groups are in the species file
@@ -266,29 +278,39 @@ fn parse_eggnog_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) 
         let string_omolog_group = vals.last().unwrap();
         for src in string_omolog_group.split(',') {
             let src = src.to_uppercase();
-            let src_id = vocab.get(&src).expect(&format!("Could not map {}", &src));
+            let src_id = vocab
+                .get(&src)
+                .unwrap_or_else(|| panic!("Could not map {}", &src));
 
             sorted.push(*eggnog_group_id, *src_id)?;
             pl.light_update();
             sorted.push(*src_id, *eggnog_group_id)?;
             pl.light_update();
 
-            for dst in string_omolog_group.split(',') {
-                let dst = dst.to_uppercase();
-                if src == dst {
-                    continue;
-                }
-                let dst_id = vocab.get(&dst).expect(&format!("Could not map {}", &dst));
-                sorted.push(*src_id, *dst_id)?;
-                pl.light_update();
-            }
+            // We have switched from a clique representation
+            // to a star representation so we don't need to add
+            // all the edges.
+            //
+            // for dst in string_omolog_group.split(',') {
+            //     let dst = dst.to_uppercase();
+            //     if src == dst {
+            //         continue;
+            //     }
+            //     let dst_id = vocab.get(&dst).expect(&format!("Could not map {}", &dst));
+            //     sorted.push(*src_id, *dst_id)?;
+            //     pl.light_update();
+            // }
         }
     }
     pl.done();
     Ok(())
 }
 
-fn parse_kgx_edgelist(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs, file: &str) -> Result<()> {
+fn parse_kgx_edgelist(
+    vocab: &BTreeMap<String, usize>,
+    sorted: &mut SortPairs,
+    file: &str,
+) -> Result<()> {
     // check that all OMA groups are in the species file
     let mut pl = ProgressLogger::default();
     pl.display_memory(true);
@@ -343,7 +365,7 @@ pub fn main() -> Result<()> {
     let mut pl = ProgressLogger::default();
     pl.display_memory(true);
     pl.start("Creating the vocabulary");
-    
+
     // load the vocab
     let mut vocab = BTreeMap::new();
     let f = std::io::BufReader::new(std::fs::File::open("../vocab.tsv")?);
@@ -360,7 +382,7 @@ pub fn main() -> Result<()> {
     // a batch is 16GBs
     let mut sorted = SortPairs::new(1_000_000_000, temp_dir("/dfd/tmp"))?;
 
-    //parse_eggnog_groups(&vocab, &mut sorted)?;
+    parse_eggnog_groups(&vocab, &mut sorted)?;
     for file in KGX_FILES {
         parse_kgx_edgelist(&vocab, &mut sorted, file)?;
     }
@@ -374,7 +396,11 @@ pub fn main() -> Result<()> {
     // conver the iter to a graph
     let g = ArcListGraph::new(
         num_nodes,
-        sorted.iter().unwrap().map(|(src, dst, _)| (src, dst)).dedup(),
+        sorted
+            .iter()
+            .unwrap()
+            .map(|(src, dst, _)| (src, dst))
+            .dedup(),
     );
     // compress it
     parallel_compress_sequential_iter::<&ArcListGraph<Dedup<std::iter::Map<KMergeIters<_>, _>>>, _>(

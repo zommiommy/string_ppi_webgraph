@@ -81,7 +81,7 @@ fn check_eggnog() -> Result<()> {
         let vals = line.split('\t').collect::<Vec<_>>();
         let ppi_vals = vals.last().unwrap();
         
-        for maybe_string_id in ppi_vals.split(",") {
+        for maybe_string_id in ppi_vals.split(',') {
             if !ppi_ids.contains(maybe_string_id) {
                 panic!("{}", maybe_string_id);
             }

@@ -22,7 +22,14 @@ fn parse_oma_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
         if line.starts_with('#') {
             continue;
         }
-        for candidate_oma_entry in line.split('\t').skip(2) {
+
+        let line_iterator = line.split('\t');
+        let oma_group = line_iterator.clone().next().unwrap();
+        let oma_group_node_name = format!("OMA:{}", oma_group);
+        let node_id = vocab.len();
+        vocab.entry(oma_group_node_name.to_uppercase()).or_insert(node_id);
+
+        for candidate_oma_entry in line_iterator.skip(1) {
             let node_id = vocab.len();
             vocab.entry(candidate_oma_entry.to_uppercase()).or_insert(node_id);
         }
@@ -100,7 +107,7 @@ fn parse_string_aliases(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
         if source != "UNIPROT_AC" {
             continue;
         }
-        let node_name = line.split('\t').skip(1).next().unwrap();
+        let node_name = line.split('\t').nth(1).unwrap();
         let node_id = vocab.len();
         vocab.entry(node_name.to_uppercase()).or_insert(node_id);
         pl.light_update();
@@ -199,33 +206,33 @@ fn parse_eggnog_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     Ok(())
 }
 
-fn parse_string_links(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
-    // check that all OMA groups are in the species file
-    let mut pl = ProgressLogger::default();
-    pl.display_memory(true);
-    pl.start("Working on protein.links.full.v12.0.txt.gz");
-    let file = fs::File::open("../protein.links.full.v12.0.txt.gz")?;
-    let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
+// fn parse_string_links(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
+//     // check that all OMA groups are in the species file
+//     let mut pl = ProgressLogger::default();
+//     pl.display_memory(true);
+//     pl.start("Working on protein.links.full.v12.0.txt.gz");
+//     let file = fs::File::open("../protein.links.full.v12.0.txt.gz")?;
+//     let gz = io::BufReader::new(GzDecoder::new(io::BufReader::new(file)));
 
-    for line in gz.lines().skip(1) {
-        let line = line?;
-        if line.starts_with('#') {
-            continue;
-        }
-        let vals = line.split(' ').collect::<Vec<_>>();
-        let src = vals[0];
-        let node_id = vocab.len();
-        vocab.entry(src.to_uppercase()).or_insert(node_id);
+//     for line in gz.lines().skip(1) {
+//         let line = line?;
+//         if line.starts_with('#') {
+//             continue;
+//         }
+//         let vals = line.split(' ').collect::<Vec<_>>();
+//         let src = vals[0];
+//         let node_id = vocab.len();
+//         vocab.entry(src.to_uppercase()).or_insert(node_id);
 
         
-        let dst = vals[1];
-        let node_id = vocab.len();
-        vocab.entry(dst.to_uppercase()).or_insert(node_id);
-        pl.light_update();
-    }
-    pl.done();
-    Ok(())
-}
+//         let dst = vals[1];
+//         let node_id = vocab.len();
+//         vocab.entry(dst.to_uppercase()).or_insert(node_id);
+//         pl.light_update();
+//     }
+//     pl.done();
+//     Ok(())
+// }
 
 fn parse_string_info(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     // check that all OMA groups are in the species file
@@ -342,8 +349,8 @@ pub fn main() -> Result<()> {
     parse_oma_uniprot(&mut vocab)?;
     print_vocab(&vocab);
 
-    //parse_eggnog_groups(&mut vocab)?;
-    //print_vocab(&vocab);
+    parse_eggnog_groups(&mut vocab)?;
+    print_vocab(&vocab);
 
     dump_vocab(&vocab)?;
 
