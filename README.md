@@ -1,6 +1,11 @@
 # string_ppi_webgraph
 Experiments on merging and compressing the whole inter-species string ppi graph using webgraph-rs
 
+This will create many files, please run this to increase the limit:
+```bash
+sudo sysctl -w fs.file-max=100000000
+```
+
 # Sources
 
 ```python
