@@ -194,8 +194,12 @@ fn parse_eggnog_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
     // skip header
     for line in gz.lines() {
         let line = line?;
-
+        
         let vals = line.split('\t').collect::<Vec<_>>();
+        let ncbi_taxon_id = vals[0];
+        let ncbi_taxon_name = format!("NCBITAXON:{}", ncbi_taxon_id);
+        let node_id = vocab.len();
+        vocab.entry(ncbi_taxon_name.to_uppercase()).or_insert(node_id);
         let node_name = format!("EGG:{}", vals[1]);
         let node_id = vocab.len();
         vocab.entry(node_name.to_uppercase()).or_insert(node_id);
@@ -348,7 +352,7 @@ pub fn main() -> Result<()> {
 
     parse_oma_groups(&mut vocab)?;
     print_vocab(&vocab);
-    
+
     parse_oma_uniprot(&mut vocab)?;
     print_vocab(&vocab);
 

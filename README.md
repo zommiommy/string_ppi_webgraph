@@ -6,6 +6,18 @@ This will create many files, please run this to increase the limit:
 sudo sysctl -w fs.file-max=100000000
 ```
 
+To build the vocabulary run:
+
+```bash
+RUSTFLAGS="-C target-cpu=native" cargo run --release --bin vocab_builder
+```
+
+Then, to build the graph run:
+
+```bash
+RUSTFLAGS="-C target-cpu=native" cargo run --release --bin graph_builder
+```
+
 # Sources
 
 ```python
