@@ -58,8 +58,8 @@ fn parse_oma_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> 
             continue;
         }
 
-        let line_iterator = line.split('\t');
-        let oma_group = line_iterator.clone().next().unwrap();
+        let mut line_iterator = line.split('\t');
+        let oma_group = line_iterator.next().unwrap();
         let oma_group_node_name = format!("OMA:{}", oma_group);
         let oma_group_id = vocab.get(&oma_group_node_name).unwrap();
 

@@ -23,8 +23,8 @@ fn parse_oma_groups(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
             continue;
         }
 
-        let line_iterator = line.split('\t');
-        let oma_group = line_iterator.clone().next().unwrap();
+        let mut line_iterator = line.split('\t');
+        let oma_group = line_iterator.next().unwrap();
         let oma_group_node_name = format!("OMA:{}", oma_group);
         let node_id = vocab.len();
         vocab.entry(oma_group_node_name.to_uppercase()).or_insert(node_id);
