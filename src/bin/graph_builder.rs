@@ -360,7 +360,7 @@ pub fn main() -> Result<()> {
     // a batch is 16GBs
     let mut sorted = SortPairs::new(1_000_000_000, temp_dir("/dfd/tmp"))?;
 
-    parse_eggnog_groups(&vocab, &mut sorted)?;
+    //parse_eggnog_groups(&vocab, &mut sorted)?;
     for file in KGX_FILES {
         parse_kgx_edgelist(&vocab, &mut sorted, file)?;
     }

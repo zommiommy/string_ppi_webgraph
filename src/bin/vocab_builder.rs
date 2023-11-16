@@ -342,8 +342,8 @@ pub fn main() -> Result<()> {
     parse_oma_uniprot(&mut vocab)?;
     print_vocab(&vocab);
 
-    parse_eggnog_groups(&mut vocab)?;
-    print_vocab(&vocab);
+    //parse_eggnog_groups(&mut vocab)?;
+    //print_vocab(&vocab);
 
     dump_vocab(&vocab)?;
 
