@@ -66,7 +66,9 @@ fn parse_oma_groups(vocab: &BTreeMap<String, usize>, sorted: &mut SortPairs) -> 
         for src in line_iterator.skip(1) {
             let src = src.to_uppercase();
             let src_id = vocab.get(&src).unwrap();
-            let src_prefix = vocab.get(&src[..5]).unwrap();
+            let src_prefix = vocab.get(&src[..5]).ok_or_else(|| {
+                anyhow::anyhow!("Could not find prefix for {}", &src)
+            })?;
             sorted.push(*src_prefix, *src_id)?;
             pl.light_update();
             sorted.push(*src_id, *oma_group_id)?;
@@ -382,13 +384,13 @@ pub fn main() -> Result<()> {
     // a batch is 16GBs
     let mut sorted = SortPairs::new(1_000_000_000, temp_dir("/dfd/tmp"))?;
 
+    parse_oma_groups(&vocab, &mut sorted)?;
     // parse_eggnog_groups(&vocab, &mut sorted)?;
     for file in KGX_FILES {
         parse_kgx_edgelist(&vocab, &mut sorted, file)?;
     }
     parse_oma_uniprot(&vocab, &mut sorted)?;
     parse_oma_species(&vocab, &mut sorted)?;
-    parse_oma_groups(&vocab, &mut sorted)?;
     parse_string_aliases(&vocab, &mut sorted)?;
     parse_string_enrichment_terms(&vocab, &mut sorted)?;
     parse_string_links(&vocab, &mut sorted)?;
