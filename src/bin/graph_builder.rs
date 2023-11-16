@@ -368,7 +368,7 @@ pub fn main() -> Result<()> {
 
     // load the vocab
     let mut vocab = BTreeMap::new();
-    let f = std::io::BufReader::new(std::fs::File::open("../vocab.tsv")?);
+    let f = std::io::BufReader::new(std::fs::File::open("../vocab.no_eggnog.tsv")?);
     let mut pl = ProgressLogger::default();
     pl.display_memory(true);
     pl.start("Loading vocab");
@@ -382,7 +382,7 @@ pub fn main() -> Result<()> {
     // a batch is 16GBs
     let mut sorted = SortPairs::new(1_000_000_000, temp_dir("/dfd/tmp"))?;
 
-    parse_eggnog_groups(&vocab, &mut sorted)?;
+    // parse_eggnog_groups(&vocab, &mut sorted)?;
     for file in KGX_FILES {
         parse_kgx_edgelist(&vocab, &mut sorted, file)?;
     }
