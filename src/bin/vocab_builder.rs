@@ -260,7 +260,7 @@ fn parse_string_info(vocab: &mut BTreeMap<String, usize>) -> Result<()> {
 }
 
 fn dump_vocab(vocab: &BTreeMap<String, usize>) -> Result<()> {
-    let mut vocab_file = io::BufWriter::new(fs::File::create("../vocab.sorted.tsv")?);
+    let mut vocab_file = io::BufWriter::new(fs::File::create("../vocab.no_eggnog.sorted.tsv")?);
     for (node_name, node_id) in vocab.iter() {
         writeln!(vocab_file, "{}\t{}", node_name, node_id)?;
     }
@@ -270,7 +270,7 @@ fn dump_vocab(vocab: &BTreeMap<String, usize>) -> Result<()> {
     }).collect::<Vec<_>>();
     vocabs.sort_by_key(|(node_id, _)| *node_id);
 
-    let mut vocab_file = io::BufWriter::new(fs::File::create("../vocab.tsv")?);
+    let mut vocab_file = io::BufWriter::new(fs::File::create("../vocab.no_eggnog.tsv")?);
     for (_, node_name) in vocabs.iter() {
         writeln!(vocab_file, "{}", node_name)?;
     }
@@ -356,8 +356,8 @@ pub fn main() -> Result<()> {
     parse_oma_uniprot(&mut vocab)?;
     print_vocab(&vocab);
 
-    parse_eggnog_groups(&mut vocab)?;
-    print_vocab(&vocab);
+    // parse_eggnog_groups(&mut vocab)?;
+    // print_vocab(&vocab);
 
     dump_vocab(&vocab)?;
 
