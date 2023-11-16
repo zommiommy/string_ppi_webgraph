@@ -328,24 +328,27 @@ pub fn main() -> Result<()> {
 
     let mut vocab = BTreeMap::new();
 
-    parse_string_info(&mut vocab)?;
-    //parse_string_links(&mut vocab)?;
-    print_vocab(&vocab);
-
-    parse_string_aliases(&mut vocab)?;
-    print_vocab(&vocab);
-    parse_string_enrichment_terms(&mut vocab)?;
-    print_vocab(&vocab);
-    
     for file in KGX_FILES {
         parse_kgx_nodelist(&mut vocab, file)?;
         print_vocab(&vocab);
     }
 
-    parse_oma_groups(&mut vocab)?;
+    parse_string_info(&mut vocab)?;
+    //parse_string_links(&mut vocab)?;
     print_vocab(&vocab);
+
+    parse_string_enrichment_terms(&mut vocab)?;
+    print_vocab(&vocab);
+
+    parse_string_aliases(&mut vocab)?;
+    print_vocab(&vocab);
+
     parse_oma_species(&mut vocab)?;
     print_vocab(&vocab);
+
+    parse_oma_groups(&mut vocab)?;
+    print_vocab(&vocab);
+    
     parse_oma_uniprot(&mut vocab)?;
     print_vocab(&vocab);
 
