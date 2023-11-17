@@ -46,7 +46,7 @@ following commands, once the bug is fixed it can be removed.*
 **To run layered label propagation**, inside the [webgraph-rs](https://github.com/vigna/webgraph-rs) repository, use:
 ```bash
 # make the graph undirected and without selfoops, this will create res.simple.graph and res.simple.properties.
-cargo run --release --bin simplify res -j1
+cargo run --release --bin simplify res -j1 --batch-size=100000000
 # build elias-fano for random access, this will create res.simple.ef
 cargo run --release --bin build_eliasfano res.simple
 # run the llp this will create res.simple.llp, and 12 label files which 
@@ -55,8 +55,11 @@ cargo run --release --bin llp res.simple
 # apply the llp permutation to the original (possibly directed) graph.
 # this will create the, hopefully, better compressed graph `res.comp.graph` and
 # `res.comp.properties`
-cargo run --release --bin perm res res.comp res.simple.llp -j1
+cargo run --release --bin perm res res.comp res.simple.llp -j1 --batch-size=100000000
 ```
+`batch-size` is how many arcs (16 bytes) we will keep in memory to sort and then
+dump on a file for the external sort. The bigger the value, the faster the 
+compression will be, but it will will use more RAM.
 
 # Sources
 
