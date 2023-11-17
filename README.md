@@ -1,21 +1,61 @@
 # string_ppi_webgraph
 Experiments on merging and compressing the whole inter-species string ppi graph using webgraph-rs
 
-This will create many files, please run this to increase the limit:
+
+#### MANDATORY
+This will create many big files, please run this to increase the limit:
 ```bash
 sudo sysctl -w fs.file-max=100000000
+sudo ulimit -sn 100000
+```
+and set a tmp directory with >100GB of free space like:
+```bash
+export TMPDIR="/dfd/tmp"
+```
+moreover, all these operaion might require time, so you can enable cpu specific
+optimizations like:
+```bash
+export RUSTFLAGS="-C target-cpu=native"
 ```
 
-To build the vocabulary run:
-
+### How to
+**To build the vocabulary run:**
 ```bash
-RUSTFLAGS="-C target-cpu=native" cargo run --release --bin vocab_builder
+cargo run --release --bin vocab_builder
 ```
+this will create a `vocab.tsv` file, where the node names of each node id can 
+be found at the line with the corresponding index, and `vocab.sorted.tsv` which
+is a list of `node_name,node_id`.
 
-Then, to build the graph run:
-
+**Then, to build the graph run:**
 ```bash
-RUSTFLAGS="-C target-cpu=native" cargo run --release --bin graph_builder
+cargo run --release --bin graph_builder
+```
+This will create `res.graph` which is the compressed graph, and `res.properties`
+which contains metadata needed to read the graph and some other stats.
+
+**To convert a webgraph to tsv**, inside the [webgraph-rs](https://github.com/vigna/webgraph-rs) repository, use:
+```bash
+cargo run --release --bin to_csv /path/to/webgraph/
+```
+be careful that you must not include the `.graph` suffix.
+
+*Currently there is a bug in the paralle compression so we will add `-j1` in the
+following commands, once the bug is fixed it can be removed.*
+
+**To run layered label propagation**, inside the [webgraph-rs](https://github.com/vigna/webgraph-rs) repository, use:
+```bash
+# make the graph undirected and without selfoops, this will create res.simple.graph and res.simple.properties.
+cargo run --release --bin simplify res -j1
+# build elias-fano for random access, this will create res.simple.ef
+cargo run --release --bin build_eliasfano res.simple
+# run the llp this will create res.simple.llp, and 12 label files which 
+# can be used for comunity detection
+cargo run --release --bin llp res.simple
+# apply the llp permutation to the original (possibly directed) graph.
+# this will create the, hopefully, better compressed graph `res.comp.graph` and
+# `res.comp.properties`
+cargo run --release --bin perm res res.comp res.simple.llp -j1
 ```
 
 # Sources
